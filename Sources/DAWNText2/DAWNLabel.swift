@@ -1,11 +1,18 @@
 import UIKit
+import os
+
+@MainActor
+fileprivate let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier! + ".logger",
+    category: #file
+)
 
 public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     private var contentLayer: CALayer { layer as! LabelLayer }
     public override class var layerClass: AnyClass { LabelLayer.self }
     
+    var preferredContentSize: CGSize = .zero
     var contentSize: CGSize = .zero
-    var contentOffset: CGPoint = .zero
     
     public let textContainer = NSTextContainer()
     public let textLayoutManager = NSTextLayoutManager()
@@ -13,6 +20,11 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     
     private let textContentStorage = NSTextContentStorage()
     public var textStorage: NSTextStorage { textContentStorage.textStorage! }
+    
+    public var numberOfLines: Int {
+        get { textContainer.maximumNumberOfLines }
+        set { textContainer.maximumNumberOfLines = newValue }
+    }
     
     public var attributedText: NSAttributedString = NSAttributedString() {
         didSet {
@@ -53,16 +65,15 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         layer.backgroundColor = UIColor.clear.cgColor
         translatesAutoresizingMaskIntoConstraints = false
         
+        textContainer.lineBreakMode = .byTruncatingTail
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
         textLayoutManager.delegate = layoutController
         textLayoutManager.textViewportLayoutController.delegate = self
-        updateContentSizeIfNeeded()
-        updateTextContainerSize()
     }
     
     private func traitObservationInit() {
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+        registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]) { (self: Self, _) in
             self.setAttributedString(self.attributedText)
         }
         registerForTraitChanges([UITraitDisplayScale.self]) { (self: Self, _) in
@@ -75,7 +86,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     // MARK: - NSTextViewportLayoutControllerDelegate
     
     public func viewportBounds(for textViewportLayoutController: NSTextViewportLayoutController) -> CGRect {
-        CGRect(origin: contentOffset, size: contentSize)
+        CGRect(origin: .zero, size: preferredContentSize)
     }
 
     public func textViewportLayoutControllerWillLayout(_ controller: NSTextViewportLayoutController) {
@@ -117,11 +128,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
                 textAttachmentViewProvider.textAttachment?.image = UIImage()
                 
                 let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(at: textAttachmentViewProvider.location)
-                // https://speakerdeck.com/niw/iosdc-japan-2023?slide=33
-                attachmentView.frame = attachmentViewFrame.offsetBy(
-                    dx: textLayoutFragment.layoutFragmentFrame.minX,
-                    dy: 0
-                )
+                attachmentView.frame = attachmentViewFrame
                 addSubview(attachmentView)
             }
         }
@@ -129,77 +136,39 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     
     public func textViewportLayoutControllerDidLayout(_ controller: NSTextViewportLayoutController) {
         CATransaction.commit()
-        updateContentSizeIfNeeded()
-        adjustViewportOffsetIfNeeded()
-    }
-    
-    private func adjustViewportOffsetIfNeeded() {
-        let viewportLayoutController = textLayoutManager.textViewportLayoutController
-        let contentOffset = bounds.minY
-        
-        let compareResult = viewportLayoutController.viewportRange!.location.compare(
-            textLayoutManager.documentRange.location
-        )
-        if contentOffset < bounds.height && compareResult == .orderedDescending {
-            // Nearing top, see if we need to adjust and make room above.
-            adjustViewportOffset()
-        } else if compareResult == .orderedSame {
-            // At top, see if we need to adjust and reduce space above.
-            adjustViewportOffset()
-        }
-    }
-    
-    private func adjustViewportOffset() {
-        let viewportLayoutController = textLayoutManager.textViewportLayoutController
-        var layoutYPoint: CGFloat = 0
-        textLayoutManager.enumerateTextLayoutFragments(from: viewportLayoutController.viewportRange!.location,
-                                                        options: [.reverse, .ensuresLayout]) { layoutFragment in
-            layoutYPoint = layoutFragment.layoutFragmentFrame.origin.y
-            return true
-        }
-        if layoutYPoint != 0 {
-            let adjustmentDelta = bounds.minY - layoutYPoint
-            viewportLayoutController.adjustViewport(byVerticalOffset: adjustmentDelta)
-            let point = CGPoint(x: self.contentOffset.x, y: self.contentOffset.y + adjustmentDelta)
-            contentOffset = point
-        }
     }
     
     public override func layoutSublayers(of layer: CALayer) {
         assert(layer == self.layer)
-        textLayoutManager.textViewportLayoutController.layoutViewport()
-        updateTextContainerSize()
-        updateContentSizeIfNeeded()
-    }
-    
-    private func updateTextContainerSize() {
-        let textContainer = textLayoutManager.textContainer
-        if let textContainer, textContainer.size.width != bounds.width {
-            textContainer.size = CGSize(width: bounds.width, height: 0)
-            layer.setNeedsLayout()
-        }
-    }
-    
-    public override var intrinsicContentSize: CGSize {
-        contentSize
     }
     
     public func updateContentSizeIfNeeded() {
-        let currentWidth = bounds.width
-        let currentHeight = bounds.height
+        let newSize = sizeThatFits(preferredContentSize)
+        if abs(bounds.height - newSize.height) > 1e-10 {
+            self.contentSize = newSize
+            invalidateIntrinsicContentSize()
+        }
+    }
+    
+    public override var intrinsicContentSize: CGSize { contentSize }
+    
+    public override func sizeThatFits(_ size: CGSize) -> CGSize {
+        logger.log("PrefferedSize: \(size.width)x\(size.height)")
+        preferredContentSize = size
+        textLayoutManager.textContainer?.size = size
+        textLayoutManager.textViewportLayoutController.layoutViewport()
+        var width: Double = 0
         var height: CGFloat = 0
         textLayoutManager.enumerateTextLayoutFragments(
             from: textLayoutManager.documentRange.endLocation,
             options: [.reverse, .ensuresLayout]
         ) { layoutFragment in
-            height = layoutFragment.layoutFragmentFrame.maxY
-            return false // stop
+            width = max(layoutFragment.layoutFragmentFrame.width, width)
+            height = max(layoutFragment.layoutFragmentFrame.maxY, height)
+            return true
         }
-        height = max(height, contentSize.height)
-        if abs(currentHeight - height) > 1e-10 {
-            let contentSize = CGSize(width: bounds.width, height: height)
-            self.contentSize = contentSize
-            invalidateIntrinsicContentSize()
-        }
+        let newSize = CGSize(width: width, height: height)
+        logger.log("ContentSize: \(newSize.width)x\(newSize.height)")
+        return newSize
     }
 }

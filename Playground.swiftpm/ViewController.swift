@@ -9,18 +9,6 @@ final class ViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
-        func makeAttributedText() -> NSAttributedString {
-            let attributedText = NSMutableAttributedString()
-            attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [.foregroundColor : UIColor.label]))
-            attributedText.append(NSAttributedString(string: "🦊"))
-            attributedText.append(NSAttributedString(attachment: NSTextAttachment(image: UIImage(systemName: "apple.logo")!.withRenderingMode(.alwaysTemplate))))
-            attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [.foregroundColor : UIColor.systemRed]))
-            attributedText.append(NSAttributedString(attachment: ToggleTextAttachment()))
-            attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [.foregroundColor : UIColor.systemCyan]))
-            attributedText.append(NSAttributedString(string: "Hello, World!Hello, World!Hello, World!", attributes: [.foregroundColor : UIColor.systemPink]))
-            return attributedText
-        }
-        
         label.backgroundColor = .red
         label.attributedText = makeAttributedText()
         textView.attributedText = makeAttributedText()
@@ -93,4 +81,19 @@ class ToggleTextAttachmentViewProvider: NSTextAttachmentViewProvider {
     override func loadView() {
         view = UISwitch()
     }
+}
+
+func makeAttributedText() -> NSAttributedString {
+    let attributedText = NSMutableAttributedString()
+    attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [
+        .foregroundColor : UIColor.label,
+        .font : UIFont.preferredFont(forTextStyle: .body)
+    ]))
+    attributedText.append(NSAttributedString(string: "🦊"))
+    attributedText.append(NSAttributedString(attachment: NSTextAttachment(image: UIImage(systemName: "apple.logo")!.withRenderingMode(.alwaysTemplate))))
+    attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [.foregroundColor : UIColor.systemRed]))
+    attributedText.append(NSAttributedString(attachment: ToggleTextAttachment()))
+    attributedText.append(NSAttributedString(string: "Hello, World!", attributes: [.foregroundColor : UIColor.systemCyan]))
+    attributedText.append(NSAttributedString(string: "Hello, World!Hello, World!Hello, World!", attributes: [.foregroundColor : UIColor.systemPink]))
+    return attributedText
 }

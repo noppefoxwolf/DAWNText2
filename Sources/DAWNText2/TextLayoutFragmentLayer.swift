@@ -24,6 +24,13 @@ final class TextLayoutFragmentLayer: CALayer {
     }
     
     override func draw(in ctx: CGContext) {
-        layoutFragment.draw(at: .zero, in: ctx)
+        layoutFragment.textLineFragments.forEach { lineFragment in
+            // https://speakerdeck.com/niw/iosdc-japan-2023?slide=33
+            let point = lineFragment.typographicBounds.insetBy(
+                dx: -layoutFragment.layoutFragmentFrame.minX,
+                dy: 0
+            ).origin
+            lineFragment.draw(at: point, in: ctx)
+        }
     }
 }
