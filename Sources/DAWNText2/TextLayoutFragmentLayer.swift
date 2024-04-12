@@ -1,5 +1,12 @@
 import UIKit
 import CoreGraphics
+import os
+
+@MainActor
+fileprivate let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier! + ".logger",
+    category: #file
+)
 
 final class TextLayoutFragmentLayer: CALayer {
     let layoutFragment: NSTextLayoutFragment
