@@ -138,6 +138,10 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
                     
                     let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(at: textAttachmentViewProvider.location)
                     attachmentView.frame = attachmentViewFrame
+                        .offsetBy(
+                            dx: textLayoutFragment.layoutFragmentFrame.minX,
+                            dy: textLayoutFragment.layoutFragmentFrame.minY
+                        )
                     addSubview(attachmentView)
                 }
             }
