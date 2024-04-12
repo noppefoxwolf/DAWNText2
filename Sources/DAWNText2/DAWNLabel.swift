@@ -56,6 +56,7 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
     }
     
     private let fragmentLayerMap: NSMapTable<NSTextLayoutFragment, CALayer> = .weakToWeakObjects()
+    private var cachedSize: [Double : CGSize] = [:]
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -181,8 +182,14 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
     public override var intrinsicContentSize: CGSize { contentSize }
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
+        // 雑に計算回数を減らす
+        if size.width == 0 {
+            return .zero
+        }
+        if let size = cachedSize[size.width] {
+            return size
+        }
         print(#function, size)
-        
         preferredContentSize = CGSize(width: size.width, height: 0)
         textContainer.size = preferredContentSize
         textLayoutManager.textViewportLayoutController.layoutViewport()
@@ -197,6 +204,7 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
             return true
         }
         let newSize = CGSize(width: width.rounded(.up), height: height.rounded(.up))
+        cachedSize[size.width] = newSize
         return newSize
     }
 }
