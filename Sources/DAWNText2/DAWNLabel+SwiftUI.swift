@@ -22,6 +22,9 @@ public struct Label: UIViewRepresentable {
     
     public func updateUIView(_ uiView: UIViewType, context: Context) {
         uiView.numberOfLines = context.environment.lineLimit ?? 0
+        
+        var attributedString = attributedString
+        attributedString.font = context.environment.font
         uiView.attributedText = try! NSAttributedString(
             attributedString,
             including: \.uiKit
