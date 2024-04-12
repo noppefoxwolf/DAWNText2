@@ -26,7 +26,10 @@ final class TextLayoutFragmentLayer: CALayer {
     
     func updateGeometry() {
         bounds = layoutFragment.renderingSurfaceBounds
-        anchorPoint = CGPoint(x: -bounds.origin.x / bounds.size.width, y: -bounds.origin.y / bounds.size.height)
+        anchorPoint = CGPoint(
+            x: -bounds.origin.x / bounds.size.width,
+            y: -bounds.origin.y / bounds.size.height
+        )
         position = layoutFragment.layoutFragmentFrame.origin
     }
     
