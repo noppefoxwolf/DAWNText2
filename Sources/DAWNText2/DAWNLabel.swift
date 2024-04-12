@@ -106,35 +106,45 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         }
     }
     
-    public func textViewportLayoutController(_ textViewportLayoutController: NSTextViewportLayoutController,
-                                      configureRenderingSurfaceFor textLayoutFragment: NSTextLayoutFragment) {
-
-        let (textLayoutFragmentLayer, didCreate) = findOrCreateLayer(textLayoutFragment)
-        if !didCreate {
-            let oldPosition = textLayoutFragmentLayer.position
-            let oldBounds = textLayoutFragmentLayer.bounds
-            textLayoutFragmentLayer.updateGeometry()
-            if oldBounds != textLayoutFragmentLayer.bounds {
-                textLayoutFragmentLayer.setNeedsDisplay()
-            }
-        }
-        
-        contentLayer.addSublayer(textLayoutFragmentLayer)
-        
-        guard textLayoutFragment.state == .layoutAvailable else { return }
-        for textAttachmentViewProvider in textLayoutFragment.textAttachmentViewProviders {
-            if let attachmentView = textAttachmentViewProvider.view {
-                // Remove placeholder image
-                textAttachmentViewProvider.textAttachment?.image = UIImage()
-                
-                let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(at: textAttachmentViewProvider.location)
-                attachmentView.frame = attachmentViewFrame
-                addSubview(attachmentView)
-            }
-        }
-    }
+    public func textViewportLayoutController(
+        _ textViewportLayoutController: NSTextViewportLayoutController,
+        configureRenderingSurfaceFor textLayoutFragment: NSTextLayoutFragment
+    ) {}
     
     public func textViewportLayoutControllerDidLayout(_ controller: NSTextViewportLayoutController) {
+        
+        textLayoutManager.enumerateTextLayoutFragments(
+            from: nil,
+            options: [.ensuresLayout]
+        ) { textLayoutFragment in
+            
+            let (textLayoutFragmentLayer, didCreate) = findOrCreateLayer(textLayoutFragment)
+            if !didCreate {
+                let oldPosition = textLayoutFragmentLayer.position
+                let oldBounds = textLayoutFragmentLayer.bounds
+                textLayoutFragmentLayer.updateGeometry()
+                if oldBounds != textLayoutFragmentLayer.bounds {
+                    textLayoutFragmentLayer.setNeedsDisplay()
+                }
+            }
+            
+            contentLayer.addSublayer(textLayoutFragmentLayer)
+            
+            guard textLayoutFragment.state == .layoutAvailable else { return true }
+            for textAttachmentViewProvider in textLayoutFragment.textAttachmentViewProviders {
+                if let attachmentView = textAttachmentViewProvider.view {
+                    // Remove placeholder image
+                    textAttachmentViewProvider.textAttachment?.image = UIImage()
+                    
+                    let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(at: textAttachmentViewProvider.location)
+                    attachmentView.frame = attachmentViewFrame
+                    addSubview(attachmentView)
+                }
+            }
+            
+            return true
+        }
+        
         CATransaction.commit()
     }
     
@@ -154,16 +164,18 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
         preferredContentSize = CGSize(width: size.width, height: size.height)
-        textLayoutManager.textContainer?.size = preferredContentSize
+        textContainer.size = preferredContentSize
+
         textLayoutManager.textViewportLayoutController.layoutViewport()
         var width: Double = 0
         var height: CGFloat = 0
         textLayoutManager.enumerateTextLayoutFragments(
-            from: textLayoutManager.documentRange.endLocation,
-            options: [.reverse, .ensuresLayout]
+            from: nil,
+            options: [.ensuresLayout]
         ) { layoutFragment in
             width = max(layoutFragment.layoutFragmentFrame.width, width)
             height = max(layoutFragment.layoutFragmentFrame.maxY, height)
+            
             return true
         }
         let newSize = CGSize(width: width, height: height)
