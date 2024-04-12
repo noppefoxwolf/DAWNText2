@@ -5,7 +5,7 @@ import DAWNText2
 struct App: SwiftUI.App {
     var body: some Scene {
         WindowGroup {
-            ContentView2()
+            ContentView()
         }
     }
 }
@@ -17,12 +17,6 @@ struct ContentView: UIViewControllerRepresentable {
     
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
         
-    }
-}
-
-struct ContentView2: View {
-    var body: some View {
-        DAWNText2.Label(attributedString: AttributedString(makeAttributedText()))
     }
 }
 

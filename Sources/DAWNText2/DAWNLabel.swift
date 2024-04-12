@@ -154,8 +154,8 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
         logger.log("PrefferedSize: \(size.width)x\(size.height)")
-        preferredContentSize = size
-        textLayoutManager.textContainer?.size = size
+        preferredContentSize = CGSize(width: size.width, height: 0)
+        textLayoutManager.textContainer?.size = preferredContentSize
         textLayoutManager.textViewportLayoutController.layoutViewport()
         var width: Double = 0
         var height: CGFloat = 0
