@@ -31,6 +31,7 @@ public struct Label: UIViewRepresentable {
     
     public func sizeThatFits(_ proposal: ProposedViewSize, uiView: DAWNLabel, context: Context) -> CGSize? {
         let size = proposal.replacingUnspecifiedDimensions(by: .zero)
-        return uiView.sizeThatFits(size)
+        let roundedSize = CGSize(width: size.width.rounded(.down), height: size.height.rounded(.up))
+        return uiView.sizeThatFits(roundedSize)
     }
 }

@@ -7,7 +7,18 @@ fileprivate let logger = Logger(
     category: #file
 )
 
-public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
+final class TextLayoutManager: NSTextLayoutManager {
+    var foregroundColor: UIColor = .tintColor
+    
+    override func renderingAttributes(
+        forLink link: Any,
+        at location: any NSTextLocation
+    ) -> [NSAttributedString.Key : Any] {
+        [.foregroundColor : foregroundColor]
+    }
+}
+
+public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate {
     private var contentLayer: CALayer { layer as! LabelLayer }
     public override class var layerClass: AnyClass { LabelLayer.self }
     
@@ -15,7 +26,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     var contentSize: CGSize = .zero
     
     public let textContainer = NSTextContainer()
-    public let textLayoutManager = NSTextLayoutManager()
+    public let textLayoutManager: NSTextLayoutManager = TextLayoutManager()
     let layoutController = LayoutController()
     
     private let textContentStorage = NSTextContentStorage()
@@ -83,6 +94,11 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         }
     }
     
+    public override func tintColorDidChange() {
+        super.tintColorDidChange()
+        setAttributedString(attributedText)
+    }
+    
     // MARK: - NSTextViewportLayoutControllerDelegate
     
     public func viewportBounds(for textViewportLayoutController: NSTextViewportLayoutController) -> CGRect {
@@ -90,9 +106,9 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     }
 
     public func textViewportLayoutControllerWillLayout(_ controller: NSTextViewportLayoutController) {
+        CATransaction.begin()
         subviews.forEach({ $0.removeFromSuperview() })
         contentLayer.sublayers = nil
-        CATransaction.begin()
     }
     
     private func findOrCreateLayer(_ textLayoutFragment: NSTextLayoutFragment) -> (TextLayoutFragmentLayer, Bool) {
@@ -136,7 +152,9 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
                     // Remove placeholder image
                     textAttachmentViewProvider.textAttachment?.image = UIImage()
                     
-                    let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(at: textAttachmentViewProvider.location)
+                    let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(
+                        at: textAttachmentViewProvider.location
+                    )
                     attachmentView.frame = attachmentViewFrame
                         .offsetBy(
                             dx: textLayoutFragment.layoutFragmentFrame.minX,
@@ -152,10 +170,6 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         CATransaction.commit()
     }
     
-    public override func layoutSublayers(of layer: CALayer) {
-        assert(layer == self.layer)
-    }
-    
     public func updateContentSizeIfNeeded() {
         let newSize = sizeThatFits(preferredContentSize)
         if abs(bounds.height - newSize.height) > 1e-10 {
@@ -167,9 +181,10 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     public override var intrinsicContentSize: CGSize { contentSize }
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
+        print(#function, size)
+        
         preferredContentSize = CGSize(width: size.width, height: 0)
         textContainer.size = preferredContentSize
-
         textLayoutManager.textViewportLayoutController.layoutViewport()
         var width: Double = 0
         var height: CGFloat = 0
@@ -179,10 +194,9 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         ) { layoutFragment in
             width = max(layoutFragment.layoutFragmentFrame.width, width)
             height = max(layoutFragment.layoutFragmentFrame.maxY, height)
-            
             return true
         }
-        let newSize = CGSize(width: width, height: height)
+        let newSize = CGSize(width: width.rounded(.up), height: height.rounded(.up))
         return newSize
     }
 }
