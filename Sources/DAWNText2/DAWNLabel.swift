@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 import os
 
 @MainActor
@@ -47,6 +48,9 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
             setAttributedString(attributedText)
         }
     }
+    
+    public var openURLAction: OpenURLAction = OpenURLAction(handler: { _ in .systemAction })
+    
     /// set and resolve AttributedString
     /// - Parameter attributedString: NSAttributedString
     func setAttributedString(_ attributedString: NSAttributedString) {
@@ -97,7 +101,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     @objc func onTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: gesture.view)
         if let url = url(at: location) {
-            UIApplication.shared.open(url)
+            openURLAction(url)
         }
     }
     

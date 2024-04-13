@@ -22,7 +22,7 @@ public struct Label: UIViewRepresentable {
     
     public func updateUIView(_ uiView: UIViewType, context: Context) {
         uiView.numberOfLines = context.environment.lineLimit ?? 0
-        
+        uiView.openURLAction = context.environment.openURL
         var attributedString = attributedString
         attributedString.font = context.environment.font
         uiView.attributedText = try! NSAttributedString(
