@@ -153,12 +153,6 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     public func viewportBounds(for textViewportLayoutController: NSTextViewportLayoutController) -> CGRect {
         CGRect(origin: .zero, size: preferredContentSize)
     }
-
-    public func textViewportLayoutControllerWillLayout(_ controller: NSTextViewportLayoutController) {
-        CATransaction.begin()
-        subviews.forEach({ $0.removeFromSuperview() })
-        contentLayer.sublayers = nil
-    }
     
     private func findOrCreateLayer(_ textLayoutFragment: NSTextLayoutFragment) -> (TextLayoutFragmentLayer, Bool) {
         if let layer = fragmentLayerMap.object(forKey: textLayoutFragment) as? TextLayoutFragmentLayer {
@@ -176,8 +170,20 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
         configureRenderingSurfaceFor textLayoutFragment: NSTextLayoutFragment
     ) {}
     
-    public func textViewportLayoutControllerDidLayout(_ controller: NSTextViewportLayoutController) {
-        
+    public func updateContentSizeIfNeeded() {
+        let newSize = sizeThatFits(preferredContentSize)
+        if abs(bounds.height - newSize.height) > 1e-10 {
+            self.contentSize = newSize
+            invalidateIntrinsicContentSize()
+        }
+    }
+    
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+//        logger.debug("\(#function)")
+        CATransaction.begin()
+        subviews.forEach({ $0.removeFromSuperview() })
+        contentLayer.sublayers = nil
         textLayoutManager.enumerateTextLayoutFragments(
             from: nil,
             options: [.ensuresLayout]
@@ -215,21 +221,13 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
             
             return true
         }
-        
         CATransaction.commit()
-    }
-    
-    public func updateContentSizeIfNeeded() {
-        let newSize = sizeThatFits(preferredContentSize)
-        if abs(bounds.height - newSize.height) > 1e-10 {
-            self.contentSize = newSize
-            invalidateIntrinsicContentSize()
-        }
     }
     
     public override var intrinsicContentSize: CGSize { contentSize }
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
+        logger.debug("\(#function)")
 //        // 雑に計算回数を減らす
 //        if size.width == 0 {
 //            return .zero
