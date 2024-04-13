@@ -181,7 +181,6 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     public override func layoutSubviews() {
         super.layoutSubviews()
 //        logger.debug("\(#function)")
-        CATransaction.begin()
         subviews.forEach({ $0.removeFromSuperview() })
         contentLayer.sublayers = nil
         textLayoutManager.enumerateTextLayoutFragments(
@@ -221,13 +220,12 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
             
             return true
         }
-        CATransaction.commit()
     }
     
     public override var intrinsicContentSize: CGSize { contentSize }
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
-        logger.debug("\(#function)")
+//        logger.debug("\(#function)")
 //        // 雑に計算回数を減らす
 //        if size.width == 0 {
 //            return .zero
