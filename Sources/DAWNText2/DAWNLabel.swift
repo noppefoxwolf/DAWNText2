@@ -200,23 +200,23 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
             
             contentLayer.addSublayer(textLayoutFragmentLayer)
             
-//            guard textLayoutFragment.state == .layoutAvailable else { return true }
-//            for textAttachmentViewProvider in textLayoutFragment.textAttachmentViewProviders {
-//                if let attachmentView = textAttachmentViewProvider.view {
-//                    // Remove placeholder image
-//                    textAttachmentViewProvider.textAttachment?.image = UIImage()
-//                    
-//                    let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(
-//                        at: textAttachmentViewProvider.location
-//                    )
-//                    attachmentView.frame = attachmentViewFrame
-//                        .offsetBy(
-//                            dx: textLayoutFragment.layoutFragmentFrame.minX,
-//                            dy: textLayoutFragment.layoutFragmentFrame.minY
-//                        )
-//                    addSubview(attachmentView)
-//                }
-//            }
+            guard textLayoutFragment.state == .layoutAvailable else { return true }
+            for textAttachmentViewProvider in textLayoutFragment.textAttachmentViewProviders {
+                if let attachmentView = textAttachmentViewProvider.view {
+                    // Remove placeholder image
+                    textAttachmentViewProvider.textAttachment?.image = UIImage()
+                    
+                    let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(
+                        at: textAttachmentViewProvider.location
+                    )
+                    attachmentView.frame = attachmentViewFrame
+                        .offsetBy(
+                            dx: textLayoutFragment.layoutFragmentFrame.minX,
+                            dy: textLayoutFragment.layoutFragmentFrame.minY
+                        )
+                    addSubview(attachmentView)
+                }
+            }
             
             return true
         }
