@@ -9,7 +9,6 @@ final class DAWNText2Tests: XCTestCase {
         XCTAssertEqual(label.contentHuggingPriority(for: .vertical), .defaultLow)
         XCTAssertEqual(label.contentCompressionResistancePriority(for: .horizontal), .defaultHigh)
         XCTAssertEqual(label.contentCompressionResistancePriority(for: .vertical), .defaultHigh)
-        
     }
     
     func testTextView() async throws {
@@ -24,5 +23,14 @@ final class DAWNText2Tests: XCTestCase {
         _ = label.textStorage
         _ = label.text
         _ = label.attributedText
+    }
+    
+    func testLabel() throws {
+        let label = UILabel()
+        
+        label.attributedText = NSAttributedString(try! AttributedString(markdown: "[test](http://a.com) Hello"))
+        label.sizeToFit()
+        print(label.frame)
+        print(label.layer)
     }
 }

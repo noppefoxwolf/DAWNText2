@@ -18,7 +18,7 @@ final class TextLayoutManager: NSTextLayoutManager {
     }
 }
 
-public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate {
+public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     private var contentLayer: CALayer { layer as! LabelLayer }
     public override class var layerClass: AnyClass { LabelLayer.self }
     
@@ -35,6 +35,11 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
     public var numberOfLines: Int {
         get { textContainer.maximumNumberOfLines }
         set { textContainer.maximumNumberOfLines = newValue }
+    }
+    
+    public var lineBreakMode: NSLineBreakMode {
+        get { textContainer.lineBreakMode }
+        set { textContainer.lineBreakMode = newValue }
     }
     
     public var attributedText: NSAttributedString = NSAttributedString() {
@@ -84,28 +89,43 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
         textLayoutManager.delegate = layoutController
         textLayoutManager.textViewportLayoutController.delegate = self
         
-        let tapGestureRecognizer = UITapGestureRecognizer()
-        tapGestureRecognizer.addTarget(self, action: #selector(onTap))
-        addGestureRecognizer(tapGestureRecognizer)
+        let tapGesture = UITapGestureRecognizer()
+        tapGesture.addTarget(self, action: #selector(onTap))
+        addGestureRecognizer(tapGesture)
     }
     
     @objc func onTap(_ gesture: UITapGestureRecognizer) {
-        let tapLocation = gesture.location(in: gesture.view)
-        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: tapLocation) else { return }
+        let location = gesture.location(in: gesture.view)
+        if let url = url(at: location) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    func url(at location: CGPoint) -> URL? {
+        let attributes = attributes(at: location)
+        let link = attributes[.link]
+        return link as? URL
+    }
+    
+    func attachment(at location: CGPoint) -> NSTextAttachment? {
+        let attributes = attributes(at: location)
+        let link = attributes[.attachment]
+        return link as? NSTextAttachment
+    }
+    
+    func attributes(at location: CGPoint) -> [NSAttributedString.Key : Any] {
+        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: location) else { return [:] }
         let location = CGPoint(
-            x: tapLocation.x - textLayoutFragment.layoutFragmentFrame.minX,
-            y: tapLocation.y - textLayoutFragment.layoutFragmentFrame.minY
+            x: location.x - textLayoutFragment.layoutFragmentFrame.minX,
+            y: location.y - textLayoutFragment.layoutFragmentFrame.minY
         )
         let textLineFragment = textLayoutFragment.textLineFragments.first(
             where: { $0.typographicBounds.contains(location) }
         )
-        guard let textLineFragment else { return }
+        guard let textLineFragment else { return [:] }
         let index = textLineFragment.characterIndex(for: location)
         let attributes = textLineFragment.attributedString.attributes(at: index, effectiveRange: nil)
-        let link = attributes[.link]
-        if let url = link as? URL {
-            UIApplication.shared.open(url)
-        }
+        return attributes
     }
     
     private func traitObservationInit() {
@@ -230,5 +250,9 @@ public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate 
         let newSize = CGSize(width: width.rounded(.up), height: height.rounded(.up))
         cachedSize[size.width] = newSize
         return newSize
+    }
+    
+    public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        url(at: point) != nil || attachment(at: point) != nil
     }
 }
