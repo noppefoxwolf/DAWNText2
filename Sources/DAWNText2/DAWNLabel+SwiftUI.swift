@@ -24,7 +24,10 @@ public struct Label: UIViewRepresentable {
         uiView.numberOfLines = context.environment.lineLimit ?? 0
         uiView.openURLAction = context.environment.openURL
         var attributedString = attributedString
-        attributedString.font = context.environment.font
+        
+        // context.environment.font is only SwiftUI
+        attributedString.font = context.environment.uiFont
+        
         uiView.attributedText = try! NSAttributedString(
             attributedString,
             including: \.uiKit
