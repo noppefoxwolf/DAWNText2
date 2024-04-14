@@ -8,18 +8,7 @@ fileprivate let logger = Logger(
     category: #file
 )
 
-final class TextLayoutManager: NSTextLayoutManager {
-    var foregroundColor: UIColor = .tintColor
-    
-    override func renderingAttributes(
-        forLink link: Any,
-        at location: any NSTextLocation
-    ) -> [NSAttributedString.Key : Any] {
-        [.foregroundColor : foregroundColor]
-    }
-}
-
-public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
+public final class DAWNLabel: UIControl, NSTextViewportLayoutControllerDelegate {
     private var contentLayer: CALayer { layer as! LabelLayer }
     public override class var layerClass: AnyClass { LabelLayer.self }
     
@@ -180,7 +169,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-//        logger.debug("\(#function)")
+        logger.debug("\(#function) \(self.bounds.width)x\(self.bounds.height)")
         subviews.forEach({ $0.removeFromSuperview() })
         contentLayer.sublayers = nil
         textLayoutManager.enumerateTextLayoutFragments(
@@ -226,7 +215,7 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
     public override var intrinsicContentSize: CGSize { contentSize }
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
-//        logger.debug("\(#function)")
+        logger.debug("\(#function) \(size.width)x\(size.height)")
 //        // 雑に計算回数を減らす
 //        if size.width == 0 {
 //            return .zero
