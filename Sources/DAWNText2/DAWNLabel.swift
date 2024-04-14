@@ -197,7 +197,6 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
                     textLayoutFragmentLayer.setNeedsDisplay()
                 }
             }
-            
             contentLayer.addSublayer(textLayoutFragmentLayer)
             
             guard textLayoutFragment.state == .layoutAvailable else { return true }
@@ -209,12 +208,14 @@ public final class DAWNLabel: UIView, NSTextViewportLayoutControllerDelegate {
                     let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(
                         at: textAttachmentViewProvider.location
                     )
-                    attachmentView.frame = attachmentViewFrame
-                        .offsetBy(
+                    // 画面上に表示されない場合はsizeがzeroになる
+                    if !attachmentViewFrame.isEmpty {
+                        attachmentView.frame = attachmentViewFrame.offsetBy(
                             dx: textLayoutFragment.layoutFragmentFrame.minX,
                             dy: textLayoutFragment.layoutFragmentFrame.minY
                         )
-                    addSubview(attachmentView)
+                        addSubview(attachmentView)
+                    }
                 }
             }
             

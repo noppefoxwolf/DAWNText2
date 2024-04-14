@@ -23,6 +23,14 @@ public struct Label: UIViewRepresentable {
     public func updateUIView(_ uiView: UIViewType, context: Context) {
         uiView.numberOfLines = context.environment.lineLimit ?? 0
         uiView.openURLAction = context.environment.openURL
+        switch context.environment.truncationMode {
+        case .head:
+            uiView.lineBreakMode = .byTruncatingHead
+        case .middle:
+            uiView.lineBreakMode = .byTruncatingMiddle
+        case .tail:
+            uiView.lineBreakMode = .byTruncatingTail
+        }
         var attributedString = attributedString
         
         // context.environment.font is only SwiftUI
