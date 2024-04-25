@@ -36,18 +36,7 @@ public final class DAWNLabel: UIControl {
         
         translatesAutoresizingMaskIntoConstraints = false
         
-        controller.delegate = self
-        
-        let tapGesture = UITapGestureRecognizer()
-        tapGesture.addTarget(self, action: #selector(onTap))
-        addGestureRecognizer(tapGesture)
-    }
-    
-    @objc func onTap(_ gesture: UITapGestureRecognizer) {
-        let location = gesture.location(in: gesture.view)
-        if let url = url(at: location) {
-            openURLAction(url)
-        }
+        addPrimaryActionGesture()
     }
     
     private func traitObservationInit() {
@@ -61,7 +50,7 @@ public final class DAWNLabel: UIControl {
     
     public override func tintColorDidChange() {
         super.tintColorDidChange()
-        controller.resolveTintColor()
+        contentLayer.setNeedsDisplay()
     }
     
     public override func layoutSublayers(of layer: CALayer) {
@@ -85,7 +74,7 @@ public final class DAWNLabel: UIControl {
         
         subviews.forEach({ $0.removeFromSuperview() })
         
-        controller.layoutIfNeeded(CGSize(width: Int(bounds.size.width), height: 0))
+        controller.layoutIfNeeded(width: Int(bounds.size.width))
         
         controller.enumerateTextLayoutFragments { textLayoutFragment in
             
@@ -113,17 +102,5 @@ public final class DAWNLabel: UIControl {
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
         controller.makeSize(that: size)
-    }
-    
-    public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        url(at: point) != nil || attachment(at: point) != nil
-    }
-}
-
-extension DAWNLabel: LayoutControllerDelegate {
-    nonisolated func layoutController(_ layoutController: LayoutController, onUpdated attributedText: NSAttributedString?) {
-//        MainActor.assumeIsolated {
-//            setNeedsLayout()
-//        }
     }
 }

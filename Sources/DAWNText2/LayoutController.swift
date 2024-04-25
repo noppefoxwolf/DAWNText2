@@ -7,10 +7,6 @@ fileprivate let logger = Logger(
     category: #file
 )
 
-protocol LayoutControllerDelegate: AnyObject {
-    func layoutController(_ layoutController: LayoutController, onUpdated attributedText: NSAttributedString?)
-}
-
 final class LayoutController {
     let textContainer = NSTextContainer()
     let textLayoutManager: NSTextLayoutManager = TextLayoutManager()
@@ -18,7 +14,6 @@ final class LayoutController {
     let textViewportLayoutController = TextViewportLayoutController()
     let textContentStorage = NSTextContentStorage()
     let textStorage = NSTextStorage()
-    weak var delegate: (any LayoutControllerDelegate)? = nil
     let fragmentLayerMap: NSMapTable<NSTextLayoutFragment, CALayer> = .weakToWeakObjects()
     var layoutedSize: CGSize = .zero
     let cache = SizeCache()
@@ -52,12 +47,7 @@ final class LayoutController {
             cache.removeAll()
             layoutedSize = .zero
             textContainer.size = .zero
-            delegate?.layoutController(self, onUpdated: attributedString)
         }
-    }
-    
-    func resolveTintColor() {
-        
     }
     
     func makeSize(that fitSize: CGSize) -> CGSize {
@@ -67,30 +57,35 @@ final class LayoutController {
         if size.width <= 0 || size.width == .infinity {
             size.width = 10000000
         }
-        let cacheKey = SizeCache.Key(width: Int(size.width))
+        let width = Int(size.width.rounded(.down))
+        let cacheKey = SizeCache.Key(width: width)
         if let size = cache.value(for: cacheKey) {
             return CGSize(width: size.width, height: size.height)
         }
-        layout(size: CGSize(width: Int(size.width), height: 0))
+        layout(width: width)
         
         let newSize = makeTextLayoutSize()
-        cache.store(SizeCache.Value(width: Int(newSize.width), height: Int(newSize.height)), key: cacheKey)
-        layoutedSize = newSize
-        return newSize
+        let cacheValue = SizeCache.Value(
+            width: newSize.width,
+            height: newSize.height
+        )
+        cache.store(cacheValue, key: cacheKey)
+        layoutedSize = CGSize(width: newSize.width, height: newSize.height)
+        return layoutedSize
     }
     
-    func layoutIfNeeded(_ size: CGSize) {
-        if layoutedSize.width != size.width {
-            layout(size: size)
+    func layoutIfNeeded(width: Int) {
+        if Int(layoutedSize.width) != width {
+            layout(width: width)
         }
     }
     
-    func layout(size: CGSize) {
-        textContainer.size = size
+    func layout(width: Int) {
+        textContainer.size = CGSize(width: width, height: 0)
         textLayoutManager.textViewportLayoutController.layoutViewport()
     }
     
-    func makeTextLayoutSize() -> CGSize {
+    func makeTextLayoutSize() -> (width: Int, height: Int) {
         var width: Double = 0
         var height: CGFloat = 0
         textLayoutManager.enumerateTextLayoutFragments(
@@ -101,7 +96,10 @@ final class LayoutController {
             height = max(textLayoutFragment.layoutFragmentFrame.maxY, height)
             return true
         }
-        return CGSize(width: width.rounded(.up), height: height.rounded(.up))
+        return (
+            width: Int(width.rounded(.up)),
+            height: Int(height.rounded(.up)) + 1 // workaround: +1
+        )
     }
 }
 
