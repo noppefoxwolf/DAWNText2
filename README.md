@@ -1,7 +1,11 @@
+# DAWNText2
+
+lightweight TextKit2 based text render view.
 
 # TODO
 
-- [ ] linelimit
-- [ ] truncate
-- [ ] SwiftUI
-- [ ] linkable
+- [x] linelimit
+- [x] truncate
+- [x] SwiftUI
+- [x] linkable
+- [x] darkmode
