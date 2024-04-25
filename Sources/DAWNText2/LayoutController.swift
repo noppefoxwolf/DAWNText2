@@ -19,6 +19,7 @@ final class LayoutController {
     let cache = SizeCache()
     
     init() {
+        textContainer.lineFragmentPadding = 0
         textContainer.lineBreakMode = .byTruncatingTail
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
@@ -88,6 +89,7 @@ final class LayoutController {
     func makeTextLayoutSize() -> (width: Int, height: Int) {
         var width: Double = 0
         var height: CGFloat = 0
+        
         textLayoutManager.enumerateTextLayoutFragments(
             from: nil,
             options: [.ensuresLayout, .ensuresExtraLineFragment]
@@ -98,7 +100,7 @@ final class LayoutController {
         }
         return (
             width: Int(width.rounded(.up)),
-            height: Int(height.rounded(.up)) + 1 // workaround: +1
+            height: Int(height.rounded(.up))
         )
     }
 }
