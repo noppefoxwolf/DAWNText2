@@ -3,13 +3,7 @@ import UIKit
 
 final class LabelLayer: CALayer {
     
-    var textLayoutFragments: [NSTextLayoutFragment] = [] {
-        didSet {
-            if textLayoutFragments != oldValue {
-                setNeedsDisplay()
-            }
-        }
-    }
+    var textLayoutFragments: [NSTextLayoutFragment] = []
     
     override init() {
         super.init()
