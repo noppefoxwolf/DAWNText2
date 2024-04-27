@@ -1,7 +1,7 @@
 import QuartzCore
 import UIKit
 
-final class LabelLayer: CALayer {
+final class LabelLayer: ContentLayer {
     
     var textLayoutFragments: [NSTextLayoutFragment] = []
     
@@ -17,8 +17,6 @@ final class LabelLayer: CALayer {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override class func defaultAction(forKey event: String) -> (any CAAction)? { NSNull() }
     
     override func draw(in ctx: CGContext) {
         for textLayoutFragment in textLayoutFragments {

@@ -7,7 +7,7 @@ public final class DAWNTextView: UIView {
     let output: any ViewOutput
     public weak var delegate: (any DAWNTextViewDelegate)? = nil
     // workaround: can not add sublayer and subview directly.
-    let contentLayer = CALayer()
+    let contentLayer = ContentLayer()
     var cancellables: Set<AnyCancellable> = []
     
     public override init(frame: CGRect) {
@@ -33,6 +33,8 @@ public final class DAWNTextView: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public override class var layerClass: AnyClass { ContentLayer.self }
     
     func addTapGestureRecognizer() {
         let tapGestureRecognizer = DAWNTextViewGestureRecognizer(output: output, storage: storage)
