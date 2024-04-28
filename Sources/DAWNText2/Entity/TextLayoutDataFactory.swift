@@ -11,8 +11,9 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     
     init(storage: TextStorage) {
         self.storage = storage
-        textContainer.lineFragmentPadding = 0
-        textContainer.lineBreakMode = .byTruncatingTail
+        textContentStorage.attributedString = storage.attributedText
+        textContainer.lineBreakMode = storage.lineBreakMode
+        textContainer.maximumNumberOfLines = storage.numberOfLines
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
         textContentStorage.textStorage = textStorage
@@ -20,9 +21,6 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     
     @MainActor
     func make(for size: TextLayoutSize) -> TextLayoutData {
-        textContentStorage.attributedString = storage.attributedText
-        textContainer.lineBreakMode = storage.lineBreakMode
-        textContainer.maximumNumberOfLines = storage.numberOfLines
         textContainer.size = size.cgSize
         textLayoutManager.delegate = self
         textLayoutManager.textViewportLayoutController.layoutViewport()
