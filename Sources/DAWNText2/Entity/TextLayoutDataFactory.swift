@@ -1,30 +1,35 @@
 import UIKit
 
 final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
-    let textContainer: NSTextContainer
+    let textContainer = NSTextContainer()
     let textLayoutManager = NSTextLayoutManager()
     
     let textContentStorage = NSTextContentStorage()
     
     let textStorage = NSTextStorage()
-    let storage: TextStorage
     
-    init(for size: TextLayoutSize, storage: TextStorage) {
-        self.textContainer = NSTextContainer(size: size.cgSize)
-        self.storage = storage
-        textContainer.lineFragmentPadding = 0
-        textContainer.lineBreakMode = storage.lineBreakMode
-        textContainer.maximumNumberOfLines = storage.numberOfLines
+    override init() {
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
         textContentStorage.textStorage = textStorage
-        textContentStorage.attributedString = storage.attributedText
         super.init()
-        textLayoutManager.delegate = self
     }
     
     @MainActor
-    func make() -> TextLayoutData {
+    func make(for size: TextLayoutSize, storage: TextStorage) -> TextLayoutData {
+        textContainer.size = size.cgSize
+        textContainer.lineFragmentPadding = 0
+        textContainer.lineBreakMode = storage.lineBreakMode
+        textContainer.maximumNumberOfLines = storage.numberOfLines
+        
+        textContentStorage.attributedString = storage.attributedText
+        
+        let coordinator = NSTextLayoutManagerCoordinator(
+            tintColor: storage.tintColor,
+            buttonShapesEnabled: storage.buttonShapesEnabled
+        )
+        textLayoutManager.delegate = coordinator
+        
         textLayoutManager.textViewportLayoutController.layoutViewport()
         
         var layoutWidth: Int = 0
@@ -82,6 +87,18 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         return data
     }
     
+    
+}
+
+final class NSTextLayoutManagerCoordinator: NSObject, NSTextLayoutManagerDelegate {
+    let tintColor: UIColor
+    let buttonShapesEnabled: Bool
+    
+    init(tintColor: UIColor, buttonShapesEnabled: Bool) {
+        self.tintColor = tintColor
+        self.buttonShapesEnabled = buttonShapesEnabled
+    }
+    
     func textLayoutManager(
         _ textLayoutManager: NSTextLayoutManager,
         renderingAttributesForLink link: Any,
@@ -89,9 +106,8 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         defaultAttributes renderingAttributes: [NSAttributedString.Key : Any] = [:]
     ) -> [NSAttributedString.Key : Any]? {
         var defaultAttributes = renderingAttributes
-        defaultAttributes[.foregroundColor] = storage.tintColor
-        defaultAttributes[.underlineStyle] = storage.buttonShapesEnabled ? NSUnderlineStyle.single.rawValue : nil
+        defaultAttributes[.foregroundColor] = tintColor
+        defaultAttributes[.underlineStyle] = buttonShapesEnabled ? NSUnderlineStyle.single.rawValue : nil
         return defaultAttributes
     }
 }
-

@@ -113,8 +113,13 @@ extension DAWNTextView: ViewInput {
     }
     
     func setAttachmentViews(_ views: [UIView]) {
-        subviews.forEach({ $0.removeFromSuperview() })
-        views.forEach({ addSubview($0) })
+        subviews
+            .filter({ !views.contains($0) })
+            .forEach({ $0.removeFromSuperview() })
+        
+        views
+            .filter({ !subviews.contains($0) })
+            .forEach({ addSubview($0) })
     }
     
     func openURL(_ url: URL) {
@@ -183,6 +188,7 @@ protocol ViewOutput {
 final class Presenter: ViewOutput {
     weak var view: (any ViewInput)?
     let keyFactory = KeyFactory()
+    let textLayoutDataFactory = TextLayoutDataFactory()
     let textLayoutDataCache = TextLayoutDataCache()
     
     func containsSelectable(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) -> Bool {
@@ -226,7 +232,7 @@ final class Presenter: ViewOutput {
         if let data = textLayoutDataCache.data(for: key) {
             return data
         } else {
-            let data = TextLayoutDataFactory(for: size, storage: storage).make()
+            let data = textLayoutDataFactory.make(for: size, storage: storage)
             textLayoutDataCache.store(data, for: key)
             return data
         }
