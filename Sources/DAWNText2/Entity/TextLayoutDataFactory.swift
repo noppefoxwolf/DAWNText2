@@ -1,7 +1,7 @@
 import UIKit
 
 final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
-    let textContainer = NSTextContainer()
+    let textContainer: NSTextContainer
     let textLayoutManager = NSTextLayoutManager()
     
     let textContentStorage = NSTextContentStorage()
@@ -9,8 +9,9 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     let textStorage = NSTextStorage()
     let storage: TextStorage
     
-    init(storage: TextStorage) {
+    init(for size: TextLayoutSize, storage: TextStorage) {
         self.storage = storage
+        textContainer = NSTextContainer(size: size.cgSize)
         textContentStorage.attributedString = storage.attributedText
         textContainer.lineBreakMode = storage.lineBreakMode
         textContainer.maximumNumberOfLines = storage.numberOfLines
@@ -20,8 +21,7 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     }
     
     @MainActor
-    func make(for size: TextLayoutSize) -> TextLayoutData {
-        textContainer.size = size.cgSize
+    func make() -> TextLayoutData {
         textLayoutManager.delegate = self
         textLayoutManager.textViewportLayoutController.layoutViewport()
         
