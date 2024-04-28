@@ -1,14 +1,16 @@
 import UIKit
 
-final class TextLayoutDataFactory {
+final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     let textContainer = NSTextContainer()
-    let textLayoutManager = TextLayoutManager()
+    let textLayoutManager = NSTextLayoutManager()
     
     let textContentStorage = NSTextContentStorage()
     
     let textStorage = NSTextStorage()
+    let storage: TextStorage
     
-    init() {
+    init(storage: TextStorage) {
+        self.storage = storage
         textContainer.lineFragmentPadding = 0
         textContainer.lineBreakMode = .byTruncatingTail
         textLayoutManager.textContainer = textContainer
@@ -17,13 +19,12 @@ final class TextLayoutDataFactory {
     }
     
     @MainActor
-    func make(for size: TextLayoutSize, storage: TextStorage) -> TextLayoutData {
+    func make(for size: TextLayoutSize) -> TextLayoutData {
         textContentStorage.attributedString = storage.attributedText
         textContainer.lineBreakMode = storage.lineBreakMode
         textContainer.maximumNumberOfLines = storage.numberOfLines
         textContainer.size = size.cgSize
-        textLayoutManager.foregroundColor = storage.tintColor
-        textLayoutManager.buttonShapesEnabled = storage.buttonShapesEnabled
+        textLayoutManager.delegate = self
         textLayoutManager.textViewportLayoutController.layoutViewport()
         
         var layoutWidth: Int = 0
@@ -79,6 +80,13 @@ final class TextLayoutDataFactory {
         )
         
         return data
+    }
+    
+    func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, renderingAttributesForLink link: Any, at location: any NSTextLocation, defaultAttributes renderingAttributes: [NSAttributedString.Key : Any] = [:]) -> [NSAttributedString.Key : Any]? {
+        var defaultAttributes = renderingAttributes
+        defaultAttributes[.foregroundColor] = storage.tintColor
+        defaultAttributes[.underlineStyle] = storage.buttonShapesEnabled ? NSUnderlineStyle.single.rawValue : nil
+        return defaultAttributes
     }
 }
 

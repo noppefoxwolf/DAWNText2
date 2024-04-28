@@ -1,7 +1,8 @@
 import UIKit
 import Combine
 
-public final class DAWNTextView: UIView {
+// workaround: UIControl allows hitTesting in SwiftUI.UIViewRepresentable
+public final class DAWNTextView: UIControl {
     let storage = TextStorage()
     var primaryAction: UIAction? = nil
     let output: any ViewOutput
@@ -16,6 +17,8 @@ public final class DAWNTextView: UIView {
         super.init(frame: frame)
         presenter.view = self
         
+        isUserInteractionEnabled = true
+        
         setContentHuggingPriority(.defaultLow, for: .horizontal)
         setContentHuggingPriority(.defaultLow, for: .vertical)
         setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
@@ -24,7 +27,6 @@ public final class DAWNTextView: UIView {
         storage.buttonShapesEnabled = UIAccessibility.buttonShapesEnabled
         storage.tintColor = tintColor
         storage.scale = traitCollection.displayScale
-        addTapGestureRecognizer()
         register()
         
         layer.addSublayer(contentLayer)
@@ -36,16 +38,9 @@ public final class DAWNTextView: UIView {
     
     public override class var layerClass: AnyClass { ContentLayer.self }
     
-    func addTapGestureRecognizer() {
-        let tapGestureRecognizer = DAWNTextViewGestureRecognizer(output: output, storage: storage)
-        tapGestureRecognizer.addTarget(self, action: #selector(onTap))
-        addGestureRecognizer(tapGestureRecognizer)
-    }
-    
-    @objc func onTap(_ gestureRecognizer: DAWNTextViewGestureRecognizer) {
-        guard gestureRecognizer.state == .ended else { return }
-        let location = gestureRecognizer.location(in: gestureRecognizer.view)
-        output.onTap(at: location, size: TextLayoutSize(bounds.size), storage: storage)
+    public override func layerWillDraw(_ layer: CALayer) {
+        super.layerWillDraw(layer)
+        contentLayer.sublayers = nil
     }
     
     func register() {
@@ -83,6 +78,31 @@ public final class DAWNTextView: UIView {
     
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
         output.sizeThatFits(TextLayoutSize(size), storage: storage).cgSize
+    }
+    
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        let location = touches.first?.location(in: self)
+        if let location {
+            output.onTap(
+                at: location,
+                size: TextLayoutSize(bounds.size),
+                storage: storage
+            )
+        }
+    }
+    
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let containsSelectable = output.containsSelectable(
+            at: point,
+            size: TextLayoutSize(bounds.size),
+            storage: storage
+        )
+        if containsSelectable {
+            return super.hitTest(point, with: event)
+        } else {
+            return nil
+        }
     }
 }
 
@@ -144,6 +164,7 @@ extension DAWNTextView {
 protocol ViewInput: AnyObject {
     func setNeedsDisplay()
     func setNeedsLayout()
+    func invalidateIntrinsicContentSize()
     func setLayer(_ layer: CALayer)
     func setAttachmentViews(_ views: [UIView])
     func openURL(_ url: URL)
@@ -153,7 +174,7 @@ protocol ViewInput: AnyObject {
 protocol ViewOutput {
     func onTap(at location: CGPoint, size: TextLayoutSize, storage: TextStorage)
     func onChangedStorage()
-    func otherGestureShouldCancel(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) -> Bool
+    func containsSelectable(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) -> Bool
     func layoutSubLayers(_ size: TextLayoutSize, storage: TextStorage)
     func layoutSubviews(_ size: TextLayoutSize, storage: TextStorage)
     func sizeThatFits(_ size: TextLayoutSize, storage: TextStorage) -> TextLayoutSize
@@ -164,11 +185,13 @@ final class Presenter: ViewOutput {
     let keyFactory = KeyFactory()
     let textLayoutDataCache = TextLayoutDataCache()
     
-    func otherGestureShouldCancel(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) -> Bool {
+    func containsSelectable(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) -> Bool {
         let data = retrieveTextLayoutData(for: size, storage: storage)
         let attributes = data.textLayoutManager.attributes(for: location)
         let url = attributes[.link] as? URL
-        return url != nil
+        let attachment = attributes[.attachment] as? NSTextAttachment
+        let tag = attributes[.textItemTag] as? String
+        return url != nil || attachment != nil
     }
     
     func onTap(at location: CGPoint, size: TextLayoutSize, storage: TextStorage) {
@@ -203,7 +226,7 @@ final class Presenter: ViewOutput {
         if let data = textLayoutDataCache.data(for: key) {
             return data
         } else {
-            let data = TextLayoutDataFactory().make(for: size, storage: storage)
+            let data = TextLayoutDataFactory(storage: storage).make(for: size)
             textLayoutDataCache.store(data, for: key)
             return data
         }

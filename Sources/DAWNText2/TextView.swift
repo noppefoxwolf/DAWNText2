@@ -16,9 +16,8 @@ public struct TextView: UIViewRepresentable {
 
     public func updateUIView(_ uiView: DAWNTextView, context: Context) {
         context.coordinator.openURLAction = context.environment.openURL
-        
         uiView.numberOfLines = context.environment.lineLimit ?? 0
-        //uiView.openURLAction = context.environment.openURL
+        
         switch context.environment.truncationMode {
         case .head:
             uiView.lineBreakMode = .byTruncatingHead
