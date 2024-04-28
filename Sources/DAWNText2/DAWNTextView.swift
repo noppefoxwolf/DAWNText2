@@ -226,7 +226,7 @@ final class Presenter: ViewOutput {
         if let data = textLayoutDataCache.data(for: key) {
             return data
         } else {
-            let data = TextLayoutDataFactory(storage: storage).make(for: size)
+            let data = TextLayoutDataFactory(for: size, storage: storage).make()
             textLayoutDataCache.store(data, for: key)
             return data
         }
