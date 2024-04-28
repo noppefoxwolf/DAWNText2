@@ -10,19 +10,21 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     let storage: TextStorage
     
     init(for size: TextLayoutSize, storage: TextStorage) {
+        self.textContainer = NSTextContainer(size: size.cgSize)
         self.storage = storage
-        textContainer = NSTextContainer(size: size.cgSize)
-        textContentStorage.attributedString = storage.attributedText
+        textContainer.lineFragmentPadding = 0
         textContainer.lineBreakMode = storage.lineBreakMode
         textContainer.maximumNumberOfLines = storage.numberOfLines
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
         textContentStorage.textStorage = textStorage
+        textContentStorage.attributedString = storage.attributedText
+        super.init()
+        textLayoutManager.delegate = self
     }
     
     @MainActor
     func make() -> TextLayoutData {
-        textLayoutManager.delegate = self
         textLayoutManager.textViewportLayoutController.layoutViewport()
         
         var layoutWidth: Int = 0
@@ -80,7 +82,12 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         return data
     }
     
-    func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, renderingAttributesForLink link: Any, at location: any NSTextLocation, defaultAttributes renderingAttributes: [NSAttributedString.Key : Any] = [:]) -> [NSAttributedString.Key : Any]? {
+    func textLayoutManager(
+        _ textLayoutManager: NSTextLayoutManager,
+        renderingAttributesForLink link: Any,
+        at location: any NSTextLocation,
+        defaultAttributes renderingAttributes: [NSAttributedString.Key : Any] = [:]
+    ) -> [NSAttributedString.Key : Any]? {
         var defaultAttributes = renderingAttributes
         defaultAttributes[.foregroundColor] = storage.tintColor
         defaultAttributes[.underlineStyle] = storage.buttonShapesEnabled ? NSUnderlineStyle.single.rawValue : nil
