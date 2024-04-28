@@ -112,14 +112,18 @@ extension DAWNTextView: ViewInput {
         contentLayer.addSublayer(textLayer)
     }
     
-    func setAttachmentViews(_ views: [UIView]) {
+    func setAttachmentViews(_ views: [(UIView, CGRect)]) {
         subviews
-            .filter({ !views.contains($0) })
+            .filter({ !views.map(\.0).contains($0) })
             .forEach({ $0.removeFromSuperview() })
         
         views
-            .filter({ !subviews.contains($0) })
-            .forEach({ addSubview($0) })
+            .forEach({ (view, frame) in
+                if !subviews.contains(view) {
+                    addSubview(view)
+                }
+                view.frame = frame
+            })
     }
     
     func openURL(_ url: URL) {
@@ -171,7 +175,7 @@ protocol ViewInput: AnyObject {
     func setNeedsLayout()
     func invalidateIntrinsicContentSize()
     func setLayer(_ layer: CALayer)
-    func setAttachmentViews(_ views: [UIView])
+    func setAttachmentViews(_ views: [(UIView, CGRect)])
     func openURL(_ url: URL)
 }
 

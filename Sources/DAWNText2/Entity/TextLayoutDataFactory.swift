@@ -37,24 +37,26 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         var renderingWidth: Int = 0
         var renderingHeight: Int = 0
         var textLayoutFragments: [NSTextLayoutFragment] = []
+        var textAttachmentViews: [(UIView, CGRect)] = []
         textLayoutManager.enumerateTextLayoutFragments(
             from: nil,
             options: [.ensuresLayout, .ensuresExtraLineFragment],
             using: { textLayoutFragment in
                 for textAttachmentViewProvider in textLayoutFragment.textAttachmentViewProviders {
-                    if let attachmentView = textAttachmentViewProvider.view {
-                        // Remove placeholder image
-                        textAttachmentViewProvider.textAttachment?.image = UIImage()
-                        
+                    // Remove placeholder image
+                    textAttachmentViewProvider.textAttachment?.image = UIImage()
+                    
+                    if let textAttachmentView = textAttachmentViewProvider.view {
                         let attachmentViewFrame = textLayoutFragment.frameForTextAttachment(
                             at: textAttachmentViewProvider.location
                         )
                         // 画面上に表示されない場合はsizeがzeroになる
                         if !attachmentViewFrame.isEmpty {
-                            attachmentView.frame = attachmentViewFrame.offsetBy(
+                            let frame = attachmentViewFrame.offsetBy(
                                 dx: 0,
                                 dy: textLayoutFragment.layoutFragmentFrame.minY
                             )
+                            textAttachmentViews.append((textAttachmentView, frame))
                         }
                     }
                 }
@@ -80,7 +82,7 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         let data = TextLayoutData(
             size: layoutSize,
             layer: layer,
-            attachmentViews: textLayoutFragments.map(\.textAttachmentViewProviders).flatMap{ $0 }.compactMap(\.view),
+            attachmentViews: textAttachmentViews,
             textLayoutManager: textLayoutManager
         )
         
