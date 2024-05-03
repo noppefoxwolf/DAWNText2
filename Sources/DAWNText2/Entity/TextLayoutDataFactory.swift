@@ -29,6 +29,7 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
             buttonShapesEnabled: storage.buttonShapesEnabled
         )
         textLayoutManager.delegate = coordinator
+        // FIXME: textItemTagのtintColorが反映されない
         
         textLayoutManager.textViewportLayoutController.layoutViewport()
         
@@ -88,8 +89,6 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         
         return data
     }
-    
-    
 }
 
 final class NSTextLayoutManagerCoordinator: NSObject, NSTextLayoutManagerDelegate {
