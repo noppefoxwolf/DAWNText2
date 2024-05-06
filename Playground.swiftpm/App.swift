@@ -13,17 +13,25 @@ struct App: SwiftUI.App {
 struct ContentView: View {
     
     @State var color: Color = .accentColor
+    @State var usesDAWNText: Bool = true
     
     var body: some View {
         NavigationView {
-            SampleView()
+            SampleView(usesDAWNText: usesDAWNText)
                 .toolbar {
-                    ToolbarItem(placement: .bottomBar) {
+                    Menu {
                         Picker("Accent Color", selection: $color) {
                             Text("Default").tag(Color.accentColor)
                             Text("Yellow").tag(Color.yellow)
                             Text("Custom").tag(Color(uiColor: .custom))
-                        }.pickerStyle(.inline)
+                        }.pickerStyle(.menu)
+                        
+                        Picker("Component", selection: $usesDAWNText) {
+                            Text("DAWNText").tag(true)
+                            Text("SwiftUI").tag(false)
+                        }.pickerStyle(.menu)
+                    } label: {
+                        Image(systemName: "ellipsis")
                     }
                 }
                 .tint(color)
@@ -32,12 +40,15 @@ struct ContentView: View {
 }
 
 struct SampleView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> some UIViewController {
+    typealias UIViewControllerType = ViewController
+    let usesDAWNText: Bool
+    
+    func makeUIViewController(context: Context) -> UIViewControllerType {
         ViewController()
     }
     
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-        
+        uiViewController.usesDAWNText = usesDAWNText
     }
 }
 

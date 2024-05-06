@@ -9,37 +9,49 @@ enum Section: Int {
 struct Item: Hashable {
     let id: UUID = UUID()
     let attributedString: AttributedString
+    let usesDAWNText: Bool
 }
 
 final class ViewController: UITableViewController {
     lazy var dataSource = UITableViewDiffableDataSource<Section, Item>(
         tableView: tableView,
         cellProvider: { [unowned self] (tableView, indexPath, item) in
-            let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-            cell.contentConfiguration = UIHostingConfiguration(content: {
-                VStack {
+            if item.usesDAWNText {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "DAWNTextCell", for: indexPath)
+                cell.contentConfiguration = UIHostingConfiguration(content: {
                     DAWNText2.TextView(item.attributedString)
+                })
+                return cell
+            } else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "SwiftUITextCell", for: indexPath)
+                cell.contentConfiguration = UIHostingConfiguration(content: {
                     SwiftUI.Text(item.attributedString)
-                }
-            })
-            return cell
+                })
+                return cell
+            }
         }
     )
     
     var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
     
+    var usesDAWNText: Bool = true {
+        didSet {
+            snapshot.deleteAllItems()
+            snapshot.appendSections([.items])
+            snapshot.appendItems((0..<10).map({ _ in
+                return Item(attributedString: .sample, usesDAWNText: usesDAWNText)
+            }), toSection: .items)
+            
+            dataSource.apply(snapshot, animatingDifferences: false)
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DAWNTextCell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SwiftUITextCell")
         _ = dataSource
-        
-        snapshot.appendSections([.items])
-        snapshot.appendItems((0..<10).map({ _ in
-            return Item(attributedString: .sample)
-        }), toSection: .items)
-        
-        dataSource.apply(snapshot)
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

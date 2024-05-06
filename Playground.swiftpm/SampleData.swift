@@ -7,11 +7,10 @@ extension AttributedString {
         let markdown = """
         Lorem ipsum dolor sit amet. [Aut harum quod et galisum quia ad eligendi illo.](https://apple.com) Ut voluptas dolor aut reiciendis veniam qui numquam aliquam ut amet assumenda eos ratione dignissimos ut beatae commodi. **Et vero numquam** ut nisi asperiores qui accusamus blanditiis qui soluta voluptatibus sed omnis nesciunt.
         """
-        var markdownAttr = try! AttributedString(
+        let markdownAttr = try! AttributedString(
             markdown: markdown,
             options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
         )
-        markdownAttr.foregroundColor = UIColor.label
         attributedString.append(markdownAttr)
         
         let attachment = UISwitchAttachment()
@@ -26,8 +25,6 @@ extension AttributedString {
         textTagAttr.foregroundColor = UIColor.tintColor
         textTagAttr.textItemTag = "dev.noppe.dawn-text.text-item-tag"
         attributedString.append(textTagAttr)
-        
-        attributedString.font = .body
         
         return attributedString
     }

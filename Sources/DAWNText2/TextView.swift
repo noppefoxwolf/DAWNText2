@@ -18,7 +18,6 @@ public struct TextView: UIViewRepresentable {
         context.coordinator.openURLAction = context.environment.openURL
         uiView.numberOfLines = context.environment.lineLimit ?? 0
         
-        
         switch context.environment.truncationMode {
         case .head:
             uiView.lineBreakMode = .byTruncatingHead
@@ -33,7 +32,9 @@ public struct TextView: UIViewRepresentable {
 
         // context.environment.font is only SwiftUI
         attributedString.font = context.environment.uiFont
+        
         uiView.delegate = context.coordinator
+        
         let attributedText = try! NSAttributedString(
             attributedString,
             including: \.uiKit

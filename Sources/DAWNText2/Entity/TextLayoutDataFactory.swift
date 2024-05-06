@@ -1,6 +1,6 @@
 import UIKit
 
-final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
+final class TextLayoutDataFactory {
     let textContainer = NSTextContainer()
     let textLayoutManager = NSTextLayoutManager()
     
@@ -8,29 +8,30 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     
     let textStorage = NSTextStorage()
     
-    override init() {
+    init() {
         textLayoutManager.textContainer = textContainer
         textContentStorage.addTextLayoutManager(textLayoutManager)
         textContentStorage.textStorage = textStorage
-        super.init()
     }
     
     @MainActor
     func make(for size: TextLayoutSize, storage: TextStorage) -> TextLayoutData {
-        
-        let attributedText = storage.attributedText?.colorResolved(storage.traitCollection)
-        textContentStorage.textStorage?.setAttributedString(attributedText ?? NSAttributedString())
+        let storageCoordinator = NSTextContentStorageCoordinator(
+            traitCollection: storage.traitCollection
+        )
+        textContentStorage.delegate = storageCoordinator
+        textContentStorage.textStorage?.setAttributedString(storage.attributedText ?? NSAttributedString())
         
         textContainer.size = size.cgSize
         textContainer.lineFragmentPadding = 0
         textContainer.lineBreakMode = storage.lineBreakMode
         textContainer.maximumNumberOfLines = storage.numberOfLines
         
-        let coordinator = NSTextLayoutManagerCoordinator(
+        let managerCoordinator = NSTextLayoutManagerCoordinator(
             tintColor: UIColor.tintColor.resolvedColor(with: storage.traitCollection),
             buttonShapesEnabled: storage.buttonShapesEnabled
         )
-        textLayoutManager.delegate = coordinator
+        textLayoutManager.delegate = managerCoordinator
         // FIXME: textItemTagのtintColorが反映されない
         
         textLayoutManager.textViewportLayoutController.layoutViewport()
@@ -93,6 +94,24 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     }
 }
 
+final class NSTextContentStorageCoordinator: NSObject, NSTextContentStorageDelegate {
+    let traitCollection: UITraitCollection
+    
+    init(traitCollection: UITraitCollection) {
+        self.traitCollection = traitCollection
+    }
+    
+    func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
+        var paragraphWithDisplayAttributes: NSTextParagraph? = nil
+        let originalText = textContentStorage.textStorage!.attributedSubstring(from: range)
+        
+        paragraphWithDisplayAttributes = NSTextParagraph(
+            attributedString: originalText.colorResolved(traitCollection)
+        )
+        return paragraphWithDisplayAttributes
+    }
+}
+
 final class NSTextLayoutManagerCoordinator: NSObject, NSTextLayoutManagerDelegate {
     let tintColor: UIColor
     let buttonShapesEnabled: Bool
@@ -119,15 +138,22 @@ extension NSAttributedString {
     func colorResolved(_ traitCollection: UITraitCollection) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(attributedString: self)
         let range = NSRange(location: 0, length: attributedString.length)
-        attributedString.enumerateAttribute(.foregroundColor, in: range, using: { value, range, _ in
-            if let color = value as? UIColor {
+        attributedString.enumerateAttributes(in: range) { attributes, range, _ in
+            if let color = attributes[.foregroundColor] as? UIColor {
                 attributedString.addAttribute(
                     .foregroundColor,
                     value: color.resolvedColor(with: traitCollection),
                     range: range
                 )
+            } else {
+                // default text color
+                attributedString.addAttribute(
+                    .foregroundColor,
+                    value: UIColor.label.resolvedColor(with: traitCollection),
+                    range: range
+                )
             }
-        })
+        }
         return attributedString
     }
 }
