@@ -24,9 +24,7 @@ public final class DAWNTextView: UIControl {
         setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         
-        storage.buttonShapesEnabled = UIAccessibility.buttonShapesEnabled
-        storage.tintColor = tintColor
-        storage.scale = traitCollection.displayScale
+        storage.traitCollection = traitCollection
         register()
         
         layer.addSublayer(contentLayer)
@@ -45,10 +43,11 @@ public final class DAWNTextView: UIControl {
     
     func register() {
         registerForTraitChanges([UITraitDisplayScale.self]) { (traitEnvironment: Self, previousTraitCollection) in
-            traitEnvironment.storage.scale = traitEnvironment.traitCollection.displayScale
+            traitEnvironment.storage.traitCollection = traitEnvironment.traitCollection
             traitEnvironment.output.onChangedStorage()
         }
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (traitEnvironment: Self, previousTraitCollection) in
+            traitEnvironment.storage.traitCollection = traitEnvironment.traitCollection
             traitEnvironment.output.onChangedStorage()
         }
         NotificationCenter.default
@@ -72,7 +71,7 @@ public final class DAWNTextView: UIControl {
     
     public override func tintColorDidChange() {
         super.tintColorDidChange()
-        storage.tintColor = tintColor
+        storage.traitCollection = traitCollection
         output.onChangedStorage()
     }
     

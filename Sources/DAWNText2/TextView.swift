@@ -33,10 +33,11 @@ public struct TextView: UIViewRepresentable {
         // context.environment.font is only SwiftUI
         attributedString.font = context.environment.uiFont
         uiView.delegate = context.coordinator
-        uiView.attributedText = try! NSAttributedString(
+        let attributedText = try! NSAttributedString(
             attributedString,
             including: \.uiKit
         )
+        uiView.attributedText = attributedText
     }
     
     public static func dismantleUIView(_ uiView: DAWNTextView, coordinator: Coordinator) {

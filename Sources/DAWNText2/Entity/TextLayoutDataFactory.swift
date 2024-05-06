@@ -17,15 +17,17 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
     
     @MainActor
     func make(for size: TextLayoutSize, storage: TextStorage) -> TextLayoutData {
+        
+        let attributedText = storage.attributedText?.colorResolved(storage.traitCollection)
+        textContentStorage.textStorage?.setAttributedString(attributedText ?? NSAttributedString())
+        
         textContainer.size = size.cgSize
         textContainer.lineFragmentPadding = 0
         textContainer.lineBreakMode = storage.lineBreakMode
         textContainer.maximumNumberOfLines = storage.numberOfLines
         
-        textContentStorage.attributedString = storage.attributedText
-        
         let coordinator = NSTextLayoutManagerCoordinator(
-            tintColor: storage.tintColor,
+            tintColor: UIColor.tintColor.resolvedColor(with: storage.traitCollection),
             buttonShapesEnabled: storage.buttonShapesEnabled
         )
         textLayoutManager.delegate = coordinator
@@ -73,8 +75,8 @@ final class TextLayoutDataFactory: NSObject, NSTextLayoutManagerDelegate {
         let renderingSize = TextLayoutSize(width: renderingWidth, height: renderingHeight)
         
         let layer = LabelLayer()
-        layer.contentsScale = storage.scale
-        layer.rasterizationScale = storage.scale
+        layer.contentsScale = storage.traitCollection.displayScale
+        layer.rasterizationScale = storage.traitCollection.displayScale
         // FIXME: leading rendering inset
         layer.frame = CGRect(origin: .zero, size: renderingSize.cgSize)
         layer.textLayoutFragments = textLayoutFragments
@@ -110,5 +112,22 @@ final class NSTextLayoutManagerCoordinator: NSObject, NSTextLayoutManagerDelegat
         defaultAttributes[.foregroundColor] = tintColor
         defaultAttributes[.underlineStyle] = buttonShapesEnabled ? NSUnderlineStyle.single.rawValue : nil
         return defaultAttributes
+    }
+}
+
+extension NSAttributedString {
+    func colorResolved(_ traitCollection: UITraitCollection) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(attributedString: self)
+        let range = NSRange(location: 0, length: attributedString.length)
+        attributedString.enumerateAttribute(.foregroundColor, in: range, using: { value, range, _ in
+            if let color = value as? UIColor {
+                attributedString.addAttribute(
+                    .foregroundColor,
+                    value: color.resolvedColor(with: traitCollection),
+                    range: range
+                )
+            }
+        })
+        return attributedString
     }
 }

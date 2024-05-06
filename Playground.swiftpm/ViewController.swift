@@ -72,7 +72,7 @@ final class ViewController: UITableViewController {
 //                markdown: [markdown3].randomElement()!,
 //                markdown: markdown4,
 //                markdown: markdown5,
-                markdown: [markdown, markdown2, markdown3, markdown4].randomElement()!,
+                markdown: [markdown, markdown2, markdown3, markdown4, markdown5].randomElement()!,
                 including: \.uiKit,
                 options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
             ) + attachmentAttr
@@ -82,6 +82,11 @@ final class ViewController: UITableViewController {
         }), toSection: .items)
         
         dataSource.apply(snapshot)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        view.window!.tintColor = .red
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

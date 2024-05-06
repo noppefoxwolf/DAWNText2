@@ -67,3 +67,14 @@ final class TextLayoutSizeTests: XCTestCase {
     }
 }
 
+class NSAttributedStringTests: XCTestCase {
+    func testNSAttributedString() async throws {
+        var attr = try AttributedString(markdown: "Hello [Link](https://apple.com) [#hashtag](https://apple.com)")
+        attr.foregroundColor = UIColor.red
+        let nsattr = try NSAttributedString(attr, including: \.uiKit)
+        let mutable = try NSAttributedString(attr, including: \.uiKit).mutableCopy()
+        print(nsattr)
+        print(mutable)
+    }
+}
+
