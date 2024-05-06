@@ -18,6 +18,7 @@ public struct TextView: UIViewRepresentable {
         context.coordinator.openURLAction = context.environment.openURL
         uiView.numberOfLines = context.environment.lineLimit ?? 0
         
+        
         switch context.environment.truncationMode {
         case .head:
             uiView.lineBreakMode = .byTruncatingHead

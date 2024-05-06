@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct UIFontKey: EnvironmentKey {
-    static let defaultValue: UIFont = .preferredFont(forTextStyle: .body)
+    static var defaultValue: UIFont {
+        UIFontMetrics.default.scaledFont(for: .preferredFont(forTextStyle: .body))
+    }
 }
 
 extension EnvironmentValues {
