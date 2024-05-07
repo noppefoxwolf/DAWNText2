@@ -8,13 +8,12 @@ final class NSTextContentStorageCoordinator: NSObject, NSTextContentStorageDeleg
     }
     
     func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
-        var paragraphWithDisplayAttributes: NSTextParagraph? = nil
-        let originalText = textContentStorage.textStorage!.attributedSubstring(from: range)
+        let originalText = textContentStorage.textStorage?.attributedSubstring(from: range)
+        guard let originalText else { return nil }
         
-        paragraphWithDisplayAttributes = NSTextParagraph(
+        return NSTextParagraph(
             attributedString: originalText.colorResolved(traitCollection)
         )
-        return paragraphWithDisplayAttributes
     }
 }
 
