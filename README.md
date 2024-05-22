@@ -34,6 +34,13 @@ DAWNText2.TextView(attributedText)
 - UIColor.tintColor
 - NSTextAttachmentViewProvider
 
+||DAWNTextView|UITextView|UILabel|SwiftUI.Text|
+|---|---|---|---|---|
+|View Provider|⭕️|⭕️|❌|❌|
+|Self-sizing|⭕️|❌|⭕️|⭕️|
+|link only selectable|⭕️|❌|⭕️|⭕️|
+
+
 # TODO
 
 - [ ] TBD
