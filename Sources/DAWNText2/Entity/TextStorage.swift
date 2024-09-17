@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 final class TextStorage {
     var attributedText: NSAttributedString? = nil
     var numberOfLines: Int = 0
